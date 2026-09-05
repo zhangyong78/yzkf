@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>圆形印章生成器</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="panel controls-panel">
+      <div class="brand">
+        <div class="brand-mark">章</div>
+        <div>
+          <h1>圆形印章生成器</h1>
+          <p>输入文字，生成可交付的印章版式</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="topText">上弧文字</label>
+        <input id="topText" type="text" value="某某某某某游戏工作室" maxlength="24" autocomplete="off">
+        <span class="hint">例如：公司名称、工作室名称</span>
+      </div>
+
+      <div class="field-group">
+        <label for="bottomText">下方文字</label>
+        <input id="bottomText" type="text" value="某某某某某" maxlength="12" autocomplete="off">
+      </div>
+
+      <div class="two-columns">
+        <div class="field-group">
+          <label for="sizeMm">印章尺寸（mm）</label>
+          <input id="sizeMm" type="number" value="40" min="10" max="200" step="1">
+        </div>
+        <div class="field-group">
+          <label for="lineWidth">边框粗细</label>
+          <input id="lineWidth" type="number" value="4" min="1" max="12" step="0.5">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="fontFamily">字体</label>
+        <select id="fontFamily">
+          <option value="SimSun, STSong, serif">宋体</option>
+          <option value="SimHei, STHeiti, sans-serif">黑体</option>
+          <option value="KaiTi, STKaiti, serif">楷体</option>
+          <option value="FangSong, STFangsong, serif">仿宋</option>
+        </select>
+        <span class="hint">交付 PSD 时，客户电脑需要安装相同字体</span>
+      </div>
+
+      <div class="field-group">
+        <label>印章颜色</label>
+        <div class="color-row">
+          <button class="color-option active" type="button" data-color="#e60012" style="--swatch:#e60012" aria-label="标准印章红"></button>
+          <button class="color-option" type="button" data-color="#b21f2d" style="--swatch:#b21f2d" aria-label="深红色"></button>
+          <button class="color-option" type="button" data-color="#c54a42" style="--swatch:#c54a42" aria-label="印泥红"></button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="regenerateBreaks" class="button secondary" type="button">换一组随机断口</button>
+        <button id="exportSvg" class="button primary" type="button">导出 SVG 矢量文件</button>
+        <button id="exportPng" class="button secondary" type="button">导出透明 PNG</button>
+        <button id="exportJsx" class="button secondary" type="button">生成 Photoshop JSX</button>
+      </div>
+
+      <p class="notice">透明 PNG 可直接导入 Photoshop；机器制作建议使用 SVG 矢量文件。</p>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="preview-header">
+        <div>
+          <span class="eyebrow">实时预览</span>
+          <h2 id="previewTitle">某某某某某</h2>
+        </div>
+        <span id="sizeLabel" class="size-label">40 × 40 mm</span>
+      </div>
+      <div class="canvas-wrap">
+        <svg id="sealPreview" viewBox="0 0 280 280" role="img" aria-label="印章预览"></svg>
+      </div>
+      <div class="layer-hint">
+        <span class="dot"></span>
+        <span>单外圆 · 上弧文字 · 中心五角星 · 水平下方文字</span>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
