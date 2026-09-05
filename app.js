@@ -25,8 +25,12 @@ function createRingBreaks() {
   }));
 }
 
+function ringStrokeWidth(data) {
+  return data.lineWidth + 1.2;
+}
+
 function ringBreakPolygons(data) {
-  const halfStroke = (data.lineWidth + 0.7) / 2;
+  const halfStroke = ringStrokeWidth(data) / 2;
   return data.ringBreaks.map((gap) => {
     const start = gap.through ? -halfStroke - 1 : gap.side * (halfStroke + 1);
     const end = gap.through ? halfStroke + 1 : gap.side * (halfStroke - gap.depth * halfStroke * 2);
@@ -114,7 +118,7 @@ function getArcCharacter(layout, index) {
 function buildSvg(data, includeText = true) {
   const topSize = topFontSizeFor(data.topText);
   const bottomSize = bottomFontSizeFor(data.bottomText);
-  const stroke = data.lineWidth;
+  const stroke = ringStrokeWidth(data);
   const ringCuts = ringBreakPolygons(data).map((polygon) =>
     `<polygon points="${polygon.map((point) => point.join(',')).join(' ')}" fill="black"/>`
   ).join('');
@@ -134,7 +138,7 @@ function buildSvg(data, includeText = true) {
       ${ringCuts}
     </mask>
   </defs>
-  <g fill="none" stroke="${data.color}" stroke-width="${stroke + 0.7}" stroke-linejoin="round">
+  <g fill="none" stroke="${data.color}" stroke-width="${stroke}" stroke-linejoin="round">
     <circle cx="140" cy="140" r="124" mask="url(#ring-breaks)"/>
   </g>
   <g fill="${data.color}">
@@ -254,7 +258,7 @@ app.displayDialogs = DialogModes.NO;
     var right = (140 + diameter / 2) * 3.2;
     var bottom = (140 + diameter / 2) * 3.2;
     document.selection.selectEllipse([left, top, right, bottom]);
-    document.selection.stroke(red, ${data.lineWidth * 3.2}, StrokeLocation.INSIDE, ColorBlendMode.NORMAL, 100, false);
+    document.selection.stroke(red, ${ringStrokeWidth(data) * 3.2}, StrokeLocation.INSIDE, ColorBlendMode.NORMAL, 100, false);
     document.selection.deselect();
   }
 
