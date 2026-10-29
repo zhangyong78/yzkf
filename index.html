@@ -28,6 +28,12 @@
         <input id="bottomText" type="text" value="某某某某某" maxlength="12" autocomplete="off">
       </div>
 
+      <div class="field-group">
+        <label for="taxId">纳税人识别号（下弧，可选）</label>
+        <input id="taxId" type="text" maxlength="20" placeholder="例如：统一社会信用代码" autocomplete="off">
+        <span class="hint">留空时不显示；支持数字和字母，最多 20 位</span>
+      </div>
+
       <div class="two-columns">
         <div class="field-group">
           <label for="sizeMm">印章尺寸（mm）</label>
@@ -82,7 +88,7 @@
       </div>
       <div class="layer-hint">
         <span class="dot"></span>
-        <span>单外圆 · 上弧文字 · 中心五角星 · 水平下方文字</span>
+        <span>单外圆 · 上弧文字 · 中心五角星 · 下方文字 · 纳税人识别号下弧</span>
       </div>
     </section>
   </main>

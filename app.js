@@ -5,6 +5,7 @@ function values() {
   return {
     topText: $('topText').value.trim() || '某某某某某游戏工作室',
     bottomText: $('bottomText').value.trim() || '某某某某某',
+    taxId: $('taxId').value.trim(),
     sizeMm: Math.max(10, Number($('sizeMm').value) || 40),
     lineWidth: Math.max(1, Number($('lineWidth').value) || 4),
     fontFamily: $('fontFamily').value,
@@ -72,6 +73,10 @@ function bottomFontSizeFor(text) {
   return Math.max(16, Math.min(32, 170 / Math.max(text.length, 5)));
 }
 
+function taxIdFontSizeFor(text) {
+  return Math.max(7, Math.min(12, 190 / Math.max(text.length, 1)));
+}
+
 function normalizeTextRotation(angle) {
   return angle + 90;
 }
@@ -85,7 +90,7 @@ function buildArcText(text, options) {
     const radians = angle * Math.PI / 180;
     const x = options.cx + Math.cos(radians) * options.radius;
     const y = options.cy + Math.sin(radians) * options.radius;
-    const rotation = normalizeTextRotation(angle);
+    const rotation = angle + (options.rotationOffset ?? 90);
     const scaleX = options.scaleX ?? 1;
     const scaleY = options.scaleY ?? 1;
     return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" fill="${options.color}" font-family="${escapeXml(options.fontFamily)}" font-size="${options.fontSize.toFixed(2)}" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${rotation.toFixed(2)}) scale(${scaleX} ${scaleY}) translate(${-x.toFixed(2)} ${-y.toFixed(2)})">${escapeXml(char)}</text>`;
@@ -98,6 +103,17 @@ function topArcLayout(text) {
     startAngle: -192.5,
     endAngle: 12.5,
     radius: 88,
+    cx: 140,
+    cy: 140,
+  };
+}
+
+function taxIdArcLayout(text) {
+  return {
+    chars: Array.from(text),
+    startAngle: 35,
+    endAngle: 145,
+    radius: 114,
     cx: 140,
     cy: 140,
   };
@@ -118,6 +134,14 @@ function getArcCharacter(layout, index) {
 function buildSvg(data, includeText = true) {
   const topSize = topFontSizeFor(data.topText);
   const bottomSize = bottomFontSizeFor(data.bottomText);
+  const bottomY = data.taxId ? 207 : 222;
+  const taxId = includeText && data.taxId ? buildArcText(data.taxId, {
+    ...taxIdArcLayout(data.taxId),
+    color: data.color,
+    fontFamily: data.fontFamily,
+    fontSize: taxIdFontSizeFor(data.taxId),
+    rotationOffset: -90,
+  }) : '';
   const stroke = ringStrokeWidth(data);
   const ringCuts = ringBreakPolygons(data).map((polygon) =>
     `<polygon points="${polygon.map((point) => point.join(',')).join(' ')}" fill="black"/>`
@@ -144,7 +168,7 @@ function buildSvg(data, includeText = true) {
   <g fill="${data.color}">
     <polygon points="${starPoints(140, 139, 32, 13.5)}"/>
     ${top}
-    ${includeText ? `<text x="140" y="222" text-anchor="middle" font-family="${escapeXml(data.fontFamily)}" font-size="${bottomSize}" font-weight="700" letter-spacing="1" textLength="${bottomLength}" lengthAdjust="spacingAndGlyphs" transform="translate(140 222) scale(0.86 1.12) translate(-140 -222)">${escapeXml(data.bottomText)}</text>` : ''}
+    ${includeText ? `<text x="140" y="${bottomY}" text-anchor="middle" font-family="${escapeXml(data.fontFamily)}" font-size="${bottomSize}" font-weight="700" letter-spacing="1" textLength="${bottomLength}" lengthAdjust="spacingAndGlyphs" transform="translate(140 ${bottomY}) scale(0.86 1.12) translate(-140 -${bottomY})">${escapeXml(data.bottomText)}</text>${taxId}` : ''}
   </g>
 </svg>`;
 }
@@ -208,12 +232,21 @@ function buildJsx(data) {
   const topLayout = topArcLayout(data.topText);
   const topSize = topFontSizeFor(data.topText);
   const bottomSize = bottomFontSizeFor(data.bottomText);
+  const bottomY = data.taxId ? 207 : 222;
+  const taxIdLayout = taxIdArcLayout(data.taxId);
+  const taxIdSize = taxIdFontSizeFor(data.taxId);
   const photoshopFont = data.fontFamily.split(',')[0].trim();
   const chars = topLayout.chars.map((char, index) => {
     const position = getArcCharacter(topLayout, index);
     const baselineY = position.y + topSize * 0.35;
     return `addTextLayer(doc, ${jsxString(char)}, ${position.x.toFixed(2)}, ${baselineY.toFixed(2)}, ${topSize.toFixed(2)}, ${jsxString(photoshopFont)}, ${jsxString(`上弧-${index + 1}`)}, ${position.rotation.toFixed(2)}, 80, 112);`;
   }).join('\n');
+  const taxIdChars = data.taxId ? taxIdLayout.chars.map((char, index) => {
+    const position = getArcCharacter(taxIdLayout, index);
+    const rotation = position.angle - 90;
+    const baselineY = position.y + taxIdSize * 0.35;
+    return `addTextLayer(doc, ${jsxString(char)}, ${position.x.toFixed(2)}, ${baselineY.toFixed(2)}, ${taxIdSize.toFixed(2)}, ${jsxString(photoshopFont)}, ${jsxString(`识别号-${index + 1}`)}, ${rotation.toFixed(2)}, 100, 100);`;
+  }).join('\n') : '';
   const star = starPoints(140, 139, 32, 13.5).split(' ').map((point) => {
     const [x, y] = point.split(',');
     return `[${(Number(x) * 3.2).toFixed(2)}, ${(Number(y) * 3.2).toFixed(2)}]`;
@@ -275,7 +308,8 @@ app.displayDialogs = DialogModes.NO;
   doc.selection.fill(red);
   doc.selection.deselect();
   ${chars}
-  addTextLayer(doc, ${jsxString(data.bottomText)}, 140, 222, ${bottomSize.toFixed(2)}, ${jsxString(photoshopFont)}, '下方文字', 0, 86, 112);
+  addTextLayer(doc, ${jsxString(data.bottomText)}, 140, ${bottomY}, ${bottomSize.toFixed(2)}, ${jsxString(photoshopFont)}, '下方文字', 0, 86, 112);
+  ${taxIdChars}
   alert('印章已生成。文字图层可以在 Photoshop 中双击修改。');
 })();
 `;
